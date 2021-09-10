@@ -37,7 +37,7 @@ use ruma::{
     },
     receipt::ReceiptType,
     serde::Raw,
-    EventId, MxcUri, RoomId, RoomVersionId, UserId,
+    EventId, MxcUri, RoomId, UserId,
 };
 use serde::{Deserialize, Serialize};
 use sled::{
@@ -633,6 +633,7 @@ impl SledStore {
             &self.start_token_to_batch_idx_position,
             &self.end_token_to_batch_idx_position,
             &self.highest_batch_idx,
+            &self.room_info,
         )
             .transaction(
                 |(
@@ -645,6 +646,7 @@ impl SledStore {
                     start_token_to_batch_idx_position,
                     end_token_to_batch_idx_position,
                     highest_batch_idx,
+                    room_info,
                 )| {
                     for (room, content) in &changes.receipts {
                         for (event_id, receipts) in &content.0 {
@@ -832,12 +834,17 @@ impl SledStore {
                                             (room.as_str(), batch.batch_idx, batch.position)
                                                 .encode(),
                                         )?
-                                        .map(|t| {
-                                            self.deserialize_event::<SyncRoomEvent>(&t).unwrap()
+                                        .and_then(|t| {
+                                            self.deserialize_event::<SyncRoomEvent>(&t).ok()
                                         })
                                         .and_then(|e| e.event.deserialize().ok())
                                     {
-                                        if let Ok(Some(room_version)) = self.get_room_version(room)
+                                        let room_version = room_info
+                                            .get(room.encode())?
+                                            .map(|r| self.deserialize_event::<RoomInfo>(&r))
+                                            .transpose().map(|i|i
+                                                .and_then(|info| info.base_info.create.map(|event| event.room_version)));
+                                        if let Ok(Some(room_version)) = room_version
                                         {
                                             let redacted_event: AnySyncRoomEvent =
                                                 full_event.redact(redaction, &room_version).into();
@@ -902,15 +909,6 @@ impl SledStore {
         info!("Saved changes in {:?}", now.elapsed());
 
         Ok(())
-    }
-
-    fn get_room_version(&self, room_id: &RoomId) -> Result<Option<RoomVersionId>> {
-        Ok(self
-            .room_info
-            .get(room_id.encode())?
-            .map(|r| self.deserialize_event::<RoomInfo>(&r))
-            .transpose()?
-            .and_then(|info| info.base_info.create.map(|event| event.room_version)))
     }
 
     pub async fn get_presence_event(&self, user_id: &UserId) -> Result<Option<Raw<PresenceEvent>>> {
