@@ -17,6 +17,7 @@ mod store_key;
 use std::{
     collections::BTreeSet,
     convert::{TryFrom, TryInto},
+    mem::size_of,
     path::{Path, PathBuf},
     sync::Arc,
     time::Instant,
@@ -210,7 +211,7 @@ impl BatchIdx {
         Self(self.0 + 1)
     }
 
-    fn to_be_bytes(self) -> [u8; 8] {
+    fn to_be_bytes(self) -> [u8; size_of::<usize>()] {
         self.0.to_be_bytes()
     }
 }
@@ -236,7 +237,7 @@ struct EventPosition {
 
 impl From<sled::IVec> for EventPosition {
     fn from(item: sled::IVec) -> Self {
-        let (first, second) = item.split_at(std::mem::size_of::<usize>());
+        let (first, second) = item.split_at(size_of::<usize>());
 
         let batch_idx = BatchIdx(usize::from_be_bytes(
             first.try_into().expect("The event position wasn't properly encoded"),
