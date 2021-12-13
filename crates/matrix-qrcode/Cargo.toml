@@ -30,5 +30,5 @@ rqrr = { version = "0.4.0", optional = true }
 thiserror = "1.0.25"
 
 [dependencies.ruma-identifiers]
-git = "https://github.com/ruma/ruma/"
-rev = "fdbc4d6d1dd273c8a6ac95b329943ed8c68df70d"
+git = "https://github.com/ftilde/ruma/"
+branch = "sparse"
