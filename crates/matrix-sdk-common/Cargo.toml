@@ -16,8 +16,8 @@ async-trait = "0.1.50"
 serde = "1.0.126"
 
 [dependencies.ruma]
-git = "https://github.com/ruma/ruma/"
-rev = "fdbc4d6d1dd273c8a6ac95b329943ed8c68df70d"
+git = "https://github.com/ftilde/ruma/"
+branch = "sparse"
 features = ["client-api-c"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
