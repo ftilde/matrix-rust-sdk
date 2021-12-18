@@ -39,7 +39,6 @@ use ruma::{
                 CancelCode, KeyVerificationCancelEventContent,
                 ToDeviceKeyVerificationCancelEventContent,
             },
-            done::{KeyVerificationDoneEventContent, ToDeviceKeyVerificationDoneEventContent},
             Relation,
         },
         AnyMessageEventContent, AnyToDeviceEventContent,
@@ -48,6 +47,11 @@ use ruma::{
 };
 pub use sas::{AcceptSettings, Sas};
 use tracing::{error, info, trace, warn};
+
+#[cfg(feature = "qrcode")]
+use ruma::events::key::verification::done::{
+    KeyVerificationDoneEventContent, ToDeviceKeyVerificationDoneEventContent,
+};
 
 use crate::{
     error::SignatureError,
@@ -243,6 +247,7 @@ pub struct Done {
 }
 
 impl Done {
+    #[cfg(feature = "qrcode")]
     pub fn as_content(&self, flow_id: &FlowId) -> OutgoingContent {
         match flow_id {
             FlowId::ToDevice(t) => AnyToDeviceEventContent::KeyVerificationDone(
