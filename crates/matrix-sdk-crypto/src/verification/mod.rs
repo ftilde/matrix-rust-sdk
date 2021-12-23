@@ -720,6 +720,18 @@ pub(crate) mod test {
         let sender = sender.to_owned();
 
         match content {
+            AnyToDeviceEventContent::KeyVerificationRequest(c) => {
+                AnyToDeviceEvent::KeyVerificationRequest(ToDeviceEvent {
+                    sender: sender.clone(),
+                    content: c,
+                })
+            }
+            AnyToDeviceEventContent::KeyVerificationReady(c) => {
+                AnyToDeviceEvent::KeyVerificationReady(ToDeviceEvent {
+                    sender: sender.clone(),
+                    content: c,
+                })
+            }
             AnyToDeviceEventContent::KeyVerificationKey(c) => {
                 AnyToDeviceEvent::KeyVerificationKey(ToDeviceEvent { sender, content: c })
             }
@@ -731,6 +743,12 @@ pub(crate) mod test {
             }
             AnyToDeviceEventContent::KeyVerificationMac(c) => {
                 AnyToDeviceEvent::KeyVerificationMac(ToDeviceEvent { sender, content: c })
+            }
+            AnyToDeviceEventContent::KeyVerificationDone(c) => {
+                AnyToDeviceEvent::KeyVerificationDone(ToDeviceEvent {
+                    sender: sender.clone(),
+                    content: c,
+                })
             }
 
             _ => unreachable!(),
